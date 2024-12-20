@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="topbar">
+        <div class="logo">My Website</div>
+        <div class="nav">
+            <a href="/" class="button">Home</a>
+            <a href="/chess" class="button">Chess</a>
+            <a href="/about" class="button">About</a>
+        </div>
+    </div>
+
+    <!-- Dynamic Content -->
+    <div class="content">
+        {{ template "content" . }}
+    </div>
+</body>
+</html>
