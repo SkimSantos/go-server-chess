@@ -6,6 +6,7 @@ import (
 	"go-http-server/utils"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 )
 
@@ -63,10 +64,32 @@ func LoginHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		println("Loging user "+user.Username+" with ID %s", user.ID)
+		print("Loging user "+user.Username+" with ID %s", user.ID)
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("{'token':" + token + "'}"))
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"token":    token,
+		})
+	}
+}
+
+func GetUserInfoHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID := chi.URLParam(r, "id")
+
+		var user models.User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			http.Error(w, "User Not Found", http.StatusUnauthorized)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"ID":       user.ID,
+			"username": user.Username,
+		})
 	}
 }
 
@@ -82,13 +105,7 @@ func GetUserStatsHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application.json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"wins":        10,
-			"losses":      5,
-			"draws":       2,
-			"most_played": "e4",
-			"total_games": 17,
-		})
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(stats)
 	}
 }

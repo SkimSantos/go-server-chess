@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Bot</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div id="user-info">
+        <button id="login-btn">Login</button>
+        <button id="signup-btn">Sign Up</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div id="chess-board-container">
+        <!-- Other player's name -->
+        <div id="player-top" class="player-name"></div>
+
+        <!-- Chess Board -->
+        <div id="chess-board"></div>
+
+        <!-- Current player's name -->
+        <div id="player-bottom" class="player-name"></div>
+      </div>
+
+      <!-- Buttons -->
+      <div id="game-controls">
+        <button id="create-game-btn" style="display: none;">Create Game</button>
+        <button id="join-game-btn" style="display: none;">Join Game</button>
+        <button id="resign-btn" style="display: none;">Resign</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
