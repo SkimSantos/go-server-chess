@@ -1,5 +1,11 @@
 const loginBtn = document.getElementById('login-btn');
 const signupBtn = document.getElementById('signup-btn');
+const modal = document.getElementById('auth-modal');
+const closeModalBtn = document.getElementById('close-modal');
+const modalTitle = document.getElementById('modal-title');
+const authFormLogin = document.getElementById('auth-form-login');
+const authSubmitBtnLogin = document.getElementById('auth-submit-btn-login');
+
 const createGameBtn = document.getElementById('create-game-btn');
 const joinGameBtn = document.getElementById('join-game-btn');
 const resignBtn = document.getElementById('resign-btn');
@@ -16,6 +22,128 @@ let whitePlayer = true;
 
 let selectedSquare = null; // Track the currently selected square
 let myTurn = false;
+
+function changeGameButtons(on = true) {
+  createGameBtn.style.display = on ? 'inline-block' : 'none';
+  joinGameBtn.style.display = on ? 'inline-block' : 'none';
+  resignBtn.style.display = on ? 'none' : 'inline-block';
+}
+
+function showModal(isLogin = true) {
+  modalTitle.textContent = isLogin ? 'Login' : 'Sign Up';
+  modal.style.display = 'block';
+
+  document.getElementById('username').value = "";
+  document.getElementById('password').value = "";
+  document.getElementById('repassword').style.display = "none";
+  document.getElementById('repass').style.display = "none";
+
+  if(!isLogin) {
+    document.getElementById('repassword').value = "";
+    document.getElementById('repassword').style.display = "block";
+    document.getElementById('repass').style.display = "block";
+  }
+
+  authFormLogin.addEventListener("submit", isLogin ? LoginSubmit : SignInSubmit);
+}
+
+async function LoginSubmit (event) {
+  authFormLogin.removeEventListener("submit", LoginSubmit);
+  event.preventDefault();
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  if(username == "") { 
+    alert('Username Missing!');
+    return 
+  }
+  if(password == "") { 
+    alert('Password Missing!');
+    return 
+  }
+  try {
+    const response = await fetch(serverHost + 'login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      user = { username, token: data.token, id: data.id }; // Save user info
+      localStorage.setItem('userToken', data.token);
+      localStorage.setItem('username', user.username);
+      userInfoDiv.innerHTML = `<span>${username}</span> <button id="logout-btn">Logout</button>`;
+      changeGameButtons(true)
+      document.getElementById('logout-btn').addEventListener('click', logout);
+      modal.style.display = 'none';
+    } else {
+      const errorMessage = await response.text();
+      alert(`Error: ${errorMessage}`);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Error Logging in');
+  }
+};
+
+async function SignInSubmit (event) {
+  event.preventDefault();
+  authFormLogin.removeEventListener("submit", SignInSubmit);
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const repassword = document.getElementById('repassword').value;
+
+  if(username == "") { 
+    alert('Username Missing!');
+    return 
+  }
+  if(password == "") { 
+    alert('Password Missing!');
+    return 
+  }
+  if(password != repassword) {
+    alert('Passwords do not match!');
+    return
+  }
+  try {
+    const response = await fetch(serverHost + 'register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username: username, password: password }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      user = { username, token: data.token, id: data.id }; // Save user info
+      localStorage.setItem('userToken', data.token);
+      localStorage.setItem('username', user.username);
+      userInfoDiv.innerHTML = `<span>${username}</span> <button id="logout-btn">Logout</button>`;
+      changeGameButtons(true)
+      document.getElementById('logout-btn').addEventListener('click', logout);
+      modal.style.display = 'none';
+    } else {
+      const errorMessage = await response.text();
+      alert(`Error: ${errorMessage}`);
+    }
+  } catch (error) {
+    console.error(error);
+    alert('Error Sing in');
+  }
+};
+
+loginBtn.addEventListener('click', () => showModal(true));
+signupBtn.addEventListener('click', () => showModal(false));
+closeModalBtn.addEventListener('click', () => (modal.style.display = 'none'));
+
+window.addEventListener('click', (event) => {
+  if (event.target === modal) {
+    console.log("close modal???");
+    modal.style.display = 'none';
+  }
+});
 
 function addMoveListeners() {
   const squares = chessBoard.querySelectorAll('div');
@@ -80,7 +208,6 @@ async function makeMove(from, to) {
     alert('Error making move.');
   }
 }
-
 
 function renderChessBoard(fen = "8/8/8/8/8/8/8/8", isPlayer1 = true, otherPlayer = "") {
   chessBoard.innerHTML = ''; // Clear the board
@@ -205,76 +332,24 @@ async function getVsPlayer() {
       
     }
   } catch (error) {
-    alert("Error getting other player")
+    console.error(error);
   }
 }
-
-// Login functionality
-loginBtn.addEventListener('click', async () => {
-  const username = prompt('Enter your username:');
-  const password = prompt('Enter your password:');
-  try {
-    const response = await fetch(serverHost + 'login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    if (response.ok) {
-      const data = await response.json();
-      user = { username, token: data.token, id: data.id };
-      userInfoDiv.innerHTML = `<span>${username}</span> <button id="logout-btn">Logout</button>`;
-      createGameBtn.style.display = 'inline-block';
-      joinGameBtn.style.display = 'inline-block';
-      resignBtn.style.display = 'none';
-      document.getElementById('logout-btn').addEventListener('click', logout);
-    } else {
-      alert('Login failed!');
-    }
-  } catch (error) {
-    console.error(error);
-    alert('Error logging in');
-  }
-});
-
-// Login functionality
-signupBtn.addEventListener('click', async () => {
-  const username = prompt('Enter new username:');
-  const password = prompt('Enter new password:');
-  const cpassword = prompt('Enter password again:');
-  if(password != cpassword) {
-    alert("Passwords don't match")
-  } else {
-    try {
-      const response = await fetch(serverHost + 'register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        alert("User Created, you can now login.")
-      } else {
-        alert('Sing in failed!');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Error sing in');
-    }
-  }
-});
 
 // Logout functionality
 function logout() {
   user = null;
+  localStorage.removeItem('userToken'); // Clear token from localStorage
+  localStorage.removeItem('username'); // Clear username
   userInfoDiv.innerHTML = '<button id="login-btn">Login</button><button id="signup-btn">Sign Up</button>';
   document.getElementById('login-btn').addEventListener('click', () => loginBtn.click());
   document.getElementById('signup-btn').addEventListener('click', () => signupBtn.click());
-  currentGame = null
+  currentGame = null;
   vsPlayer = "";
   createGameBtn.style.display = 'none';
   joinGameBtn.style.display = 'none';
   resignBtn.style.display = 'none';
-  renderChessBoard()
+  renderChessBoard();
 }
 
 // Create game functionality
@@ -374,6 +449,21 @@ resignBtn.addEventListener('click', async () => {
     alert('Error resigning game');
   }
 });
+
+window.onload = () => {
+  const storedToken = localStorage.getItem('userToken');
+  const storedUsername = localStorage.getItem('username');
+
+  if (storedToken && storedUsername) {
+    user = { username: storedUsername, token: storedToken }; // Restore user info
+    userInfoDiv.innerHTML = `<span>${storedUsername}</span> <button id="logout-btn">Logout</button>`;
+    createGameBtn.style.display = 'inline-block';
+    joinGameBtn.style.display = 'inline-block';
+    resignBtn.style.display = 'none';
+    document.getElementById('logout-btn').addEventListener('click', logout);
+  }
+};
+
 
 // Initial setup
 renderChessBoard();

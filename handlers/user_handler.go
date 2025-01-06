@@ -34,7 +34,20 @@ func RegisterHandler(db *gorm.DB) http.HandlerFunc {
 
 		println("Register user "+user.Username+" with ID %s", user.ID)
 
+		token, err := utils.GenerateJWT(user.ID)
+		print("token := " + token)
+		if err != nil {
+			http.Error(w, "Failed To Generate Token", http.StatusInternalServerError)
+			return
+		}
+
 		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"token":    token,
+		})
 	}
 }
 
@@ -58,13 +71,10 @@ func LoginHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		token, err := utils.GenerateJWT(user.ID)
-		print("token := " + token)
 		if err != nil {
 			http.Error(w, "Failed To Generate Token", http.StatusInternalServerError)
 			return
 		}
-
-		print("Loging user "+user.Username+" with ID %s", user.ID)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
