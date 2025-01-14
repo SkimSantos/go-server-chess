@@ -12,7 +12,7 @@ const resignBtn = document.getElementById('resign-btn');
 const userInfoDiv = document.getElementById('user-info');
 const chessBoard = document.getElementById('chess-board');
 
-const serverHost = "http://localhost:8080/"
+const serverHost = "https://13e8-5-249-65-163.ngrok-free.app/"
 
 // Placeholder for user and game state
 let user = null;
