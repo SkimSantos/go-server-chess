@@ -6,9 +6,16 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/websocket"
 	"github.com/notnil/chess"
 	"gorm.io/gorm"
 )
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 func GetGameHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +70,23 @@ func JoinGameHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		if len(games) == 0 {
-			http.Error(w, "No games found", http.StatusInternalServerError)
+			player1ID := r.Context().Value("userID").(uint)
+
+			// Initialize a new game
+			game := models.UsersGame{
+				Player1ID: player1ID,
+				State:     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", // Replace with actual starting FEN
+				Status:    "pending",                                                  // Game is pending until another player joins
+			}
+
+			// Save the game to the database
+			if err := db.Create(&game).Error; err != nil {
+				http.Error(w, "Failed to create game", http.StatusInternalServerError)
+				return
+			}
+
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(game)
 			return
 		}
 

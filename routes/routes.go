@@ -27,7 +27,7 @@ func SetupRoutes(db *gorm.DB) http.Handler {
 		// r.Post("/game/move", handlers.MakeMoveHandler(db))
 		// r.Post("/game/state", handlers.GetGameStateHandler(db))
 
-		r.Post("/game/create", handlers.CreateGameHandler(db))
+		// r.Post("/game/create", handlers.CreateGameHandler(db)) // Join now creates if no game found
 		r.Post("/game/join", handlers.JoinGameHandler(db))
 		r.Get("/game/get/{id}", handlers.GetGameHandler(db))
 		r.Post("/game/move", handlers.SubmitMoveHandler(db))
